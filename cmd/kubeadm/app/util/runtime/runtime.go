@@ -17,9 +17,10 @@ limitations under the License.
 package util
 
 import (
-	"path/filepath"
-	goruntime "runtime"
+	//"path/filepath"
+	//goruntime "runtime"
 	"strings"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -53,15 +54,15 @@ type DockerRuntime struct {
 func NewContainerRuntime(execer utilsexec.Interface, criSocket string) (ContainerRuntime, error) {
 	var toolName string
 	var runtime ContainerRuntime
-
+    fmt.Println("crisocket = %s , DefaultDockerCRISocket = %s", criSocket, constants.DefaultDockerCRISocket)
 	if criSocket != constants.DefaultDockerCRISocket {
 		toolName = "crictl"
 		// !!! temporary work around crictl warning:
 		// Using "/var/run/crio/crio.sock" as endpoint is deprecated,
 		// please consider using full url format "unix:///var/run/crio/crio.sock"
-		if filepath.IsAbs(criSocket) && goruntime.GOOS != "windows" {
-			criSocket = "unix://" + criSocket
-		}
+
+			criSocket = "npipe://" + criSocket
+		
 		runtime = &CRIRuntime{execer, criSocket}
 	} else {
 		toolName = "docker"

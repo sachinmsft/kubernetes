@@ -21,4 +21,7 @@ package constants
 const (
 	// DefaultDockerCRISocket defines the default Docker CRI socket
 	DefaultDockerCRISocket = "/var/run/dockershim.sock"
+	// KubernetesDir is the directory Kubernetes owns for storing various configuration files
+	KubernetesDir = "/etc/kubernetes"
+	
 )

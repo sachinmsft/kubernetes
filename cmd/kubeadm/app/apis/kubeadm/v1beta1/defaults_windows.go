@@ -23,4 +23,10 @@ const (
 	DefaultCACertPath = "C:/etc/kubernetes/pki/ca.crt"
 	// DefaultUrlScheme defines default socket url prefix
 	DefaultUrlScheme = "npipe"
+	// DefaultCertificatesDir defines default certificate directory
+	DefaultCertificatesDir = "C:/etc/kubernetes/pki"
+	// DefaultManifestsDir defines default manifests directory
+	DefaultManifestsDir = "C:/etc/kubernetes/manifests"
+	// DefaultEtcdDataDir defines default location of etcd where static pods will save data to
+	DefaultEtcdDataDir = "C:/var/lib/etcd"
 )

@@ -186,7 +186,7 @@ func (f *featureGate) SetFromMap(m map[string]bool) error {
 	for k, v := range f.enabled.Load().(map[Feature]bool) {
 		enabled[k] = v
 	}
-
+	
 	for k, v := range m {
 		k := Feature(k)
 		featureSpec, ok := known[k]

@@ -20,5 +20,8 @@ package constants
 
 const (
 	// DefaultDockerCRISocket defines the default Docker CRI socket
-	DefaultDockerCRISocket = "npipe:////./pipe/docker_engine"
+	DefaultDockerCRISocket = "npipe:////.//pipe//containerd-containerd"
+	// KubernetesDir is the directory Kubernetes owns for storing various configuration files
+	KubernetesDir = "C:/etc/kubernetes"
+	
 )

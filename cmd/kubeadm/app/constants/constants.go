@@ -35,7 +35,8 @@ import (
 
 const (
 	// KubernetesDir is the directory Kubernetes owns for storing various configuration files
-	KubernetesDir = "/etc/kubernetes"
+	PodsCommandDir = "/etc/kubernetes"
+	CertDir = "/etc/kubernetes/pki"
 	// ManifestsSubDirName defines directory name to store manifests
 	ManifestsSubDirName = "manifests"
 	// TempDirForKubeadm defines temporary directory for kubeadm

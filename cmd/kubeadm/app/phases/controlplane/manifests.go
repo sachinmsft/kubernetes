@@ -57,6 +57,11 @@ func GetStaticPodSpecs(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmap
 			Name:            kubeadmconstants.KubeAPIServer,
 			Image:           images.GetKubernetesImage(kubeadmconstants.KubeAPIServer, cfg),
 			ImagePullPolicy: v1.PullIfNotPresent,
+			Ports:           []v1.ContainerPort{
+				{
+				   HostPort: 6443, ContainerPort: 6443,
+				},
+		    },
 			Command:         getAPIServerCommand(cfg, endpoint),
 			VolumeMounts:    staticpodutil.VolumeMountMapToSlice(mounts.GetVolumeMounts(kubeadmconstants.KubeAPIServer)),
 			LivenessProbe:   livenessProbe(staticpodutil.GetAPIServerProbeAddress(endpoint), int(endpoint.BindPort), v1.URISchemeHTTPS),
@@ -67,6 +72,14 @@ func GetStaticPodSpecs(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmap
 			Name:            kubeadmconstants.KubeControllerManager,
 			Image:           images.GetKubernetesImage(kubeadmconstants.KubeControllerManager, cfg),
 			ImagePullPolicy: v1.PullIfNotPresent,
+			Ports:           []v1.ContainerPort{
+				{
+				   HostPort: 10257, ContainerPort: 10257,
+				},
+				{
+					HostPort: 10252, ContainerPort: 10252,
+				},
+		    },
 			Command:         getControllerManagerCommand(cfg, k8sVersion),
 			VolumeMounts:    staticpodutil.VolumeMountMapToSlice(mounts.GetVolumeMounts(kubeadmconstants.KubeControllerManager)),
 			LivenessProbe:   livenessProbe(staticpodutil.GetControllerManagerProbeAddress(cfg), ports.InsecureKubeControllerManagerPort, v1.URISchemeHTTP),
@@ -77,6 +90,14 @@ func GetStaticPodSpecs(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmap
 			Name:            kubeadmconstants.KubeScheduler,
 			Image:           images.GetKubernetesImage(kubeadmconstants.KubeScheduler, cfg),
 			ImagePullPolicy: v1.PullIfNotPresent,
+			Ports:           []v1.ContainerPort{
+				{
+				   HostPort: 10251, ContainerPort: 10251,
+				},
+				{
+					HostPort: 10259, ContainerPort: 10259,
+				},
+		    },
 			Command:         getSchedulerCommand(cfg),
 			VolumeMounts:    staticpodutil.VolumeMountMapToSlice(mounts.GetVolumeMounts(kubeadmconstants.KubeScheduler)),
 			LivenessProbe:   livenessProbe(staticpodutil.GetSchedulerProbeAddress(cfg), ports.InsecureSchedulerPort, v1.URISchemeHTTP),
@@ -141,12 +162,12 @@ func getAPIServerCommand(cfg *kubeadmapi.ClusterConfiguration, localAPIEndpoint 
 		"insecure-port":                   "0",
 		"enable-admission-plugins":        "NodeRestriction",
 		"service-cluster-ip-range":        cfg.Networking.ServiceSubnet,
-		"service-account-key-file":        filepath.Join(cfg.CertificatesDir, kubeadmconstants.ServiceAccountPublicKeyName),
-		"client-ca-file":                  filepath.Join(cfg.CertificatesDir, kubeadmconstants.CACertName),
-		"tls-cert-file":                   filepath.Join(cfg.CertificatesDir, kubeadmconstants.APIServerCertName),
-		"tls-private-key-file":            filepath.Join(cfg.CertificatesDir, kubeadmconstants.APIServerKeyName),
-		"kubelet-client-certificate":      filepath.Join(cfg.CertificatesDir, kubeadmconstants.APIServerKubeletClientCertName),
-		"kubelet-client-key":              filepath.Join(cfg.CertificatesDir, kubeadmconstants.APIServerKubeletClientKeyName),
+		"service-account-key-file":        strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.ServiceAccountPublicKeyName)), "\\", "/", -1),
+		"client-ca-file":                  strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.CACertName)), "\\", "/", -1),
+		"tls-cert-file":                   strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.APIServerCertName)), "\\", "/", -1), 
+		"tls-private-key-file":            strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.APIServerKeyName)), "\\", "/", -1),
+		"kubelet-client-certificate":      strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.APIServerKubeletClientCertName)), "\\", "/", -1),
+		"kubelet-client-key":              strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.APIServerKubeletClientKeyName)), "\\", "/", -1),
 		"enable-bootstrap-token-auth":     "true",
 		"secure-port":                     fmt.Sprintf("%d", localAPIEndpoint.BindPort),
 		"allow-privileged":                "true",
@@ -156,10 +177,10 @@ func getAPIServerCommand(cfg *kubeadmapi.ClusterConfiguration, localAPIEndpoint 
 		"requestheader-username-headers":     "X-Remote-User",
 		"requestheader-group-headers":        "X-Remote-Group",
 		"requestheader-extra-headers-prefix": "X-Remote-Extra-",
-		"requestheader-client-ca-file":       filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyCACertName),
+		"requestheader-client-ca-file":       strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.FrontProxyCACertName)), "\\", "/", -1),
 		"requestheader-allowed-names":        "front-proxy-client",
-		"proxy-client-cert-file":             filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyClientCertName),
-		"proxy-client-key-file":              filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyClientKeyName),
+		"proxy-client-cert-file":             strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.FrontProxyClientCertName)), "\\", "/", -1),
+		"proxy-client-key-file":              strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.FrontProxyClientKeyName)), "\\", "/", -1),
 	}
 
 	command := []string{"kube-apiserver"}
@@ -178,10 +199,10 @@ func getAPIServerCommand(cfg *kubeadmapi.ClusterConfiguration, localAPIEndpoint 
 		}
 	} else {
 		// Default to etcd static pod on localhost
-		defaultArguments["etcd-servers"] = fmt.Sprintf("https://127.0.0.1:%d", kubeadmconstants.EtcdListenClientPort)
-		defaultArguments["etcd-cafile"] = filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdCACertName)
-		defaultArguments["etcd-certfile"] = filepath.Join(cfg.CertificatesDir, kubeadmconstants.APIServerEtcdClientCertName)
-		defaultArguments["etcd-keyfile"] = filepath.Join(cfg.CertificatesDir, kubeadmconstants.APIServerEtcdClientKeyName)
+		defaultArguments["etcd-servers"] = fmt.Sprintf("https://%s:%d", localAPIEndpoint.AdvertiseAddress, kubeadmconstants.EtcdListenClientPort)
+		defaultArguments["etcd-cafile"] = strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdCACertName)), "\\", "/", -1)
+		defaultArguments["etcd-certfile"] = strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.APIServerEtcdClientCertName)), "\\", "/", -1)
+		defaultArguments["etcd-keyfile"] = strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.APIServerEtcdClientKeyName)), "\\", "/", -1)
 
 		// Apply user configurations for local etcd
 		if cfg.Etcd.Local != nil {
@@ -264,21 +285,21 @@ func calcNodeCidrSize(podSubnet string) string {
 // getControllerManagerCommand builds the right controller manager command from the given config object and version
 func getControllerManagerCommand(cfg *kubeadmapi.ClusterConfiguration, k8sVersion *version.Version) []string {
 
-	kubeconfigFile := filepath.Join(kubeadmconstants.KubernetesDir, kubeadmconstants.ControllerManagerKubeConfigFileName)
-	caFile := filepath.Join(cfg.CertificatesDir, kubeadmconstants.CACertName)
+	//kubeconfigFile := filepath.Join(kubeadmconstants.KubernetesDir, kubeadmconstants.ControllerManagerKubeConfigFileName)
+	//caFile := filepath.Join(cfg.CertificatesDir, kubeadmconstants.CACertName)
 
 	defaultArguments := map[string]string{
-		"bind-address":                     "127.0.0.1",
+		"bind-address":                     "0.0.0.0",
 		"leader-elect":                     "true",
-		"kubeconfig":                       kubeconfigFile,
-		"authentication-kubeconfig":        kubeconfigFile,
-		"authorization-kubeconfig":         kubeconfigFile,
-		"client-ca-file":                   caFile,
-		"requestheader-client-ca-file":     filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyCACertName),
-		"root-ca-file":                     caFile,
-		"service-account-private-key-file": filepath.Join(cfg.CertificatesDir, kubeadmconstants.ServiceAccountPrivateKeyName),
-		"cluster-signing-cert-file":        caFile,
-		"cluster-signing-key-file":         filepath.Join(cfg.CertificatesDir, kubeadmconstants.CAKeyName),
+		"kubeconfig":                       "/etc/kubernetes/controller-manager.conf",
+		"authentication-kubeconfig":        "/etc/kubernetes/controller-manager.conf",
+		"authorization-kubeconfig":         "/etc/kubernetes/controller-manager.conf",
+		"client-ca-file":                   "/etc/kubernetes/pki/ca.crt",
+		"requestheader-client-ca-file":     "/etc/kubernetes/pki/front-proxy-ca.crt",
+		"root-ca-file":                     "/etc/kubernetes/pki/ca.crt",
+		"service-account-private-key-file": "/etc/kubernetes/pki/sa.key",
+		"cluster-signing-cert-file":        "/etc/kubernetes/pki/ca.crt",
+		"cluster-signing-key-file":         "/etc/kubernetes/pki/ca.key",
 		"use-service-account-credentials":  "true",
 		"controllers":                      "*,bootstrapsigner,tokencleaner",
 	}
@@ -308,9 +329,9 @@ func getControllerManagerCommand(cfg *kubeadmapi.ClusterConfiguration, k8sVersio
 // getSchedulerCommand builds the right scheduler command from the given config object and version
 func getSchedulerCommand(cfg *kubeadmapi.ClusterConfiguration) []string {
 	defaultArguments := map[string]string{
-		"bind-address": "127.0.0.1",
+		"bind-address": "0.0.0.0",
 		"leader-elect": "true",
-		"kubeconfig":   filepath.Join(kubeadmconstants.KubernetesDir, kubeadmconstants.SchedulerKubeConfigFileName),
+		"kubeconfig":   "/etc/kubernetes/scheduler.conf",
 	}
 
 	command := []string{"kube-scheduler"}

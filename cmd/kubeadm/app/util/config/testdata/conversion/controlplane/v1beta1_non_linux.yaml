@@ -110,7 +110,7 @@ authorization:
     cacheAuthorizedTTL: 5m0s
     cacheUnauthorizedTTL: 30s
 cgroupDriver: cgroupfs
-cgroupsPerQOS: true
+cgroupsPerQOS: false
 clusterDNS:
 - 10.96.0.10
 clusterDomain: cluster.local

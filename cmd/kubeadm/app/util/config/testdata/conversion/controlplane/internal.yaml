@@ -91,7 +91,7 @@ ComponentConfigs:
     CPUManagerReconcilePeriod: 10s
     CgroupDriver: cgroupfs
     CgroupRoot: ""
-    CgroupsPerQOS: true
+    CgroupsPerQOS: false
     ClusterDNS:
     - 10.96.0.10
     ClusterDomain: cluster.local

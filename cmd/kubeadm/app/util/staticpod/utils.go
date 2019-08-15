@@ -64,7 +64,6 @@ func ComponentPod(container v1.Container, volumes map[string]v1.Volume) v1.Pod {
 		Spec: v1.PodSpec{
 			Containers:        []v1.Container{container},
 			PriorityClassName: "system-cluster-critical",
-			HostNetwork:       true,
 			Volumes:           VolumeMapToSlice(volumes),
 		},
 	}
@@ -81,9 +80,9 @@ func ComponentResources(cpu string) v1.ResourceRequirements {
 
 // EtcdProbe is a helper function for building a shell-based, etcdctl v1.Probe object to healthcheck etcd
 func EtcdProbe(cfg *kubeadmapi.Etcd, port int, certsDir string, CACertName string, CertName string, KeyName string) *v1.Probe {
-	tlsFlags := fmt.Sprintf("--cacert=%[1]s/%[2]s --cert=%[1]s/%[3]s --key=%[1]s/%[4]s", certsDir, CACertName, CertName, KeyName)
+	tlsFlags := fmt.Sprintf("--cacert=%s --cert=%s --key=%s", "/etc/kubernetes/pki/etcd/ca.crt", "/etc/kubernetes/pki/etcd/healthcheck-client.crt", "/etc/kubernetes/pki/etcd/healthcheck-client.key")
 	// etcd pod is alive if a linearizable get succeeds.
-	cmd := fmt.Sprintf("ETCDCTL_API=3 etcdctl --endpoints=https://[%s]:%d %s get foo", GetEtcdProbeAddress(cfg), port, tlsFlags)
+	cmd := fmt.Sprintf("ETCDCTL_API=3 etcdctl --endpoints=https://[%s]:%d %s get foo", "127.0.0.1", port, tlsFlags)
 
 	return &v1.Probe{
 		Handler: v1.Handler{

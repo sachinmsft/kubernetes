@@ -290,8 +290,8 @@ func TestValidateKubeletConfiguration(t *testing.T) {
 			clusterConfig: &kubeadm.ClusterConfiguration{
 				ComponentConfigs: kubeadm.ComponentConfigs{
 					Kubelet: &kubeletconfig.KubeletConfiguration{
-						CgroupsPerQOS:               true,
-						EnforceNodeAllocatable:      []string{"pods", "system-reserved", "kube-reserved"},
+						CgroupsPerQOS:               false,
+						EnforceNodeAllocatable:      []string{"none"},
 						SystemReservedCgroup:        "/system.slice",
 						KubeReservedCgroup:          "/kubelet.service",
 						SystemCgroups:               "",
@@ -325,7 +325,7 @@ func TestValidateKubeletConfiguration(t *testing.T) {
 			clusterConfig: &kubeadm.ClusterConfiguration{
 				ComponentConfigs: kubeadm.ComponentConfigs{
 					Kubelet: &kubeletconfig.KubeletConfiguration{
-						CgroupsPerQOS:               false,
+						CgroupsPerQOS:               true,
 						EnforceNodeAllocatable:      []string{"pods", "system-reserved", "kube-reserved", "illegal-key"},
 						SystemCgroups:               "/",
 						CgroupRoot:                  "",

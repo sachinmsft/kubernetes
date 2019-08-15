@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/Microsoft/go-winio"
+	"k8s.io/klog"
 )
 
 const (
@@ -81,8 +82,11 @@ func npipeDial(addr string, timeout time.Duration) (net.Conn, error) {
 
 func parseEndpoint(endpoint string) (string, string, error) {
 	// url.Parse doesn't recognize \, so replace with / first.
+	//fmt.Println("endpoint is %s", endpoint)
+	klog.V(1).Infof("endpoint is %s", endpoint)
 	endpoint = strings.Replace(endpoint, "\\", "/", -1)
-	u, err := url.Parse(endpoint)
+	//endpoint = "npipe://./pipe/containerd-containerd"
+	u, err := url.Parse(endpoint
 	if err != nil {
 		return "", "", err
 	}

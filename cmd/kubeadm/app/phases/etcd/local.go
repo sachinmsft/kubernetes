@@ -150,12 +150,14 @@ func CreateStackedEtcdStaticPodManifestFile(client clientset.Interface, manifest
 	return nil
 }
 
+
 // GetEtcdPodSpec returns the etcd static Pod actualized to the context of the current configuration
 // NB. GetEtcdPodSpec methods holds the information about how kubeadm creates etcd static pod manifests.
 func GetEtcdPodSpec(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmapi.APIEndpoint, nodeName string, initialCluster []etcdutil.Member) v1.Pod {
 	pathType := v1.HostPathDirectoryOrCreate
+	etcddatapathtype:= v1.HostPathFileOrCreate
 	etcdMounts := map[string]v1.Volume{
-		etcdVolumeName:  staticpodutil.NewVolume(etcdVolumeName, cfg.Etcd.Local.DataDir, &pathType),
+		etcdVolumeName:  staticpodutil.NewVolume(etcdVolumeName, "C:/etcd.vhdx", &etcddatapathtype),
 		certsVolumeName: staticpodutil.NewVolume(certsVolumeName, cfg.CertificatesDir+"/etcd", &pathType),
 	}
 	return staticpodutil.ComponentPod(v1.Container{
@@ -163,10 +165,15 @@ func GetEtcdPodSpec(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmapi.A
 		Command:         getEtcdCommand(cfg, endpoint, nodeName, initialCluster),
 		Image:           images.GetEtcdImage(cfg),
 		ImagePullPolicy: v1.PullIfNotPresent,
+		Ports:           []v1.ContainerPort{
+			             	{
+			            		HostPort: 2379, ContainerPort: 2379,
+						 	},
+		                },
 		// Mount the etcd datadir path read-write so etcd can store data in a more persistent manner
 		VolumeMounts: []v1.VolumeMount{
-			staticpodutil.NewVolumeMount(etcdVolumeName, cfg.Etcd.Local.DataDir, false),
-			staticpodutil.NewVolumeMount(certsVolumeName, cfg.CertificatesDir+"/etcd", false),
+			staticpodutil.NewVolumeMount(etcdVolumeName, "/var/lib/etcd", false),
+			staticpodutil.NewVolumeMount(certsVolumeName, "/etc/kubernetes/pki/etcd", false),
 		},
 		LivenessProbe: staticpodutil.EtcdProbe(
 			&cfg.Etcd, kubeadmconstants.EtcdListenClientPort, cfg.CertificatesDir,
@@ -179,24 +186,22 @@ func GetEtcdPodSpec(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmapi.A
 func getEtcdCommand(cfg *kubeadmapi.ClusterConfiguration, endpoint *kubeadmapi.APIEndpoint, nodeName string, initialCluster []etcdutil.Member) []string {
 	defaultArguments := map[string]string{
 		"name":                        nodeName,
-		"listen-client-urls":          fmt.Sprintf("%s,%s", etcdutil.GetClientURLByIP("127.0.0.1"), etcdutil.GetClientURL(endpoint)),
-		"advertise-client-urls":       etcdutil.GetClientURL(endpoint),
-		"listen-peer-urls":            etcdutil.GetPeerURL(endpoint),
-		"initial-advertise-peer-urls": etcdutil.GetPeerURL(endpoint),
-		"data-dir":                    cfg.Etcd.Local.DataDir,
-		"cert-file":                   filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdServerCertName),
-		"key-file":                    filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdServerKeyName),
-		"trusted-ca-file":             filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdCACertName),
+		"listen-client-urls":          fmt.Sprintf("%s", etcdutil.GetClientURLByIP("0.0.0.0")),
+		"advertise-client-urls":       "https://0.0.0.0:2379",
+		"data-dir":                    "/var/lib/etcd",
+		"cert-file":                   strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdServerCertName)),  "\\", "/", -1),
+		"key-file":                    strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdServerKeyName)),  "\\", "/", -1),
+		"trusted-ca-file":             strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdCACertName)),  "\\", "/", -1),
 		"client-cert-auth":            "true",
-		"peer-cert-file":              filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdPeerCertName),
-		"peer-key-file":               filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdPeerKeyName),
-		"peer-trusted-ca-file":        filepath.Join(cfg.CertificatesDir, kubeadmconstants.EtcdCACertName),
+		"peer-cert-file":              strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdPeerCertName)),  "\\", "/", -1),
+		"peer-key-file":               strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdPeerKeyName)),  "\\", "/", -1),
+		"peer-trusted-ca-file":        strings.Replace((filepath.Join(kubeadmconstants.CertDir, kubeadmconstants.EtcdCACertName)),  "\\", "/", -1),
 		"peer-client-cert-auth":       "true",
 		"snapshot-count":              "10000",
 	}
 
 	if len(initialCluster) == 0 {
-		defaultArguments["initial-cluster"] = fmt.Sprintf("%s=%s", nodeName, etcdutil.GetPeerURL(endpoint))
+		//defaultArguments["initial-cluster"] = fmt.Sprintf("%s=%s", nodeName, "https://127.0.0.1:2380")
 	} else {
 		// NB. the joining etcd member should be part of the initialCluster list
 		endpoints := []string{}
