@@ -241,10 +241,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: {{ .ControlPlaneTaintKey }}
-        effect: NoSchedule
+      
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        beta.kubernetes.io/os: windows
       containers:
       - name: coredns
         image: {{ .Image }}

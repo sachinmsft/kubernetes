@@ -60,6 +60,7 @@ func NewAddonPhase() workflow.Phase {
 				InheritFlags: getAddonPhaseFlags("coredns"),
 				Run:          runCoreDNSAddon,
 			},
+			/*
 			{
 				Name:         "kube-proxy",
 				Short:        "Install the kube-proxy addon to a Kubernetes cluster",
@@ -67,6 +68,7 @@ func NewAddonPhase() workflow.Phase {
 				InheritFlags: getAddonPhaseFlags("kube-proxy"),
 				Run:          runKubeProxyAddon,
 			},
+			*/
 		},
 	}
 }
